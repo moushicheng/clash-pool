@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 config();
-import { getProxies } from "./request/proxies";
+import { choiceProxyNode, getProxies } from "./request/proxies";
 import { extractSelector } from "./src/proxies";
 import {
   currentSelector,
@@ -8,6 +8,7 @@ import {
   setCurrentSelector,
   setSelectorsStorage,
 } from "./src/store";
+import { selectOne } from "./utils/selectOne";
 
 export const getSelectors = async () => {
   if (selectorsStorage) return selectorsStorage;
@@ -33,17 +34,27 @@ export const choiceSelector = async (name: string) => {
 };
 
 type Configuration = {
-  selectorName: string;
-  period: number; //轮换ip周期
+  selectorName?: string;
+  period?: number; //轮换ip周期
+  handleAllNode?: (allNode: string[]) => string[];
 };
-export const initPool = async (
-  configuration: Configuration = { period: 1000 * 60 * 5, selectorName: "" }
-) => {
-  const selectorNode = await choiceSelector(
-    configuration.selectorName || "GLOBAL"
-  );
-  const allNode: string[] = selectorNode["all"];
-  setInterval(() => {}, configuration.period);
+export const initPool = async (configuration: Configuration) => {
+  const selectorName = configuration.selectorName || "GLOBAL";
+  const period = configuration.period || 1000 * 60 * 5;
+  const selectorNode = await choiceSelector(selectorName);
+  const allNode: string[] = configuration.handleAllNode
+    ? configuration.handleAllNode(selectorNode["all"])
+    : selectorNode["all"];
+  const { next } = selectOne(allNode);
+  setInterval(() => {
+    const nextNode = next();
+
+    choiceProxyNode(selectorName, nextNode);
+  }, period);
 };
 
-initPool();
+initPool({
+  handleAllNode: (allNode) => {
+    return allNode.filter((item) => item !== "REJECT");
+  },
+});
