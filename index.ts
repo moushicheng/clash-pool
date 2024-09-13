@@ -45,7 +45,7 @@ export const initPool = async (configuration: Configuration) => {
   const allNode: string[] = configuration.handleAllNode
     ? configuration.handleAllNode(selectorNode["all"])
     : selectorNode["all"];
-  const { next, back } = selectOne(allNode);
+  const { next, back, reset } = selectOne(allNode);
   const checkConnection = async () => {
     const nextNode = next();
     choiceProxyNode(selectorName, nextNode);
@@ -66,25 +66,23 @@ export const initPool = async (configuration: Configuration) => {
         console.log("代理池已启动");
       }
     },
-    stop() {
+    pause: () => {
       clearInterval(intervalId);
       isRunning = false;
       intervalId = null; // 清除定时器ID
-      console.log("代理池已停止");
+      console.log("代理池已暂停");
+    },
+    close() {
+      this.pause();
+      reset();
+      console.log("代理池已关闭");
     },
     restart() {
-      this.stop();
+      this.close();
       this.start();
     },
   };
 };
-
-initPool({
-  handleAllNode: (allNode) => {
-    return allNode.filter((item) => item !== "REJECT");
-  },
-  period: 3000,
-});
 
 export const proxy = axios.create({
   proxy: {

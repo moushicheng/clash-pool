@@ -8,5 +8,8 @@ export const selectOne = (allNode: string[]) => {
       return allNode[--i % allNode.length];
     },
     getCurrent: () => allNode[i % allNode.length], // 获取当前节点
+    reset: () => {
+      i = 0;
+    },
   };
 };
