@@ -3,12 +3,12 @@ config();
 import { choiceProxyNode, getProxies } from "./request/proxies";
 import { extractSelector } from "./src/proxies";
 import {
-  currentSelector,
   selectorsStorage,
   setCurrentSelector,
   setSelectorsStorage,
 } from "./src/store";
 import { selectOne } from "./utils/selectOne";
+import axios from "axios";
 
 export const getSelectors = async () => {
   if (selectorsStorage) return selectorsStorage;
@@ -45,16 +45,61 @@ export const initPool = async (configuration: Configuration) => {
   const allNode: string[] = configuration.handleAllNode
     ? configuration.handleAllNode(selectorNode["all"])
     : selectorNode["all"];
-  const { next } = selectOne(allNode);
-  setInterval(() => {
+  const { next, back } = selectOne(allNode);
+  const checkConnection = async () => {
     const nextNode = next();
-
     choiceProxyNode(selectorName, nextNode);
-  }, period);
+
+    const connection = await testProxyConnection("http://www.google.com");
+    if (!connection) {
+      const originNode = back();
+      choiceProxyNode(selectorName, originNode);
+    }
+  };
+  let intervalId: any;
+  let isRunning = false;
+  return {
+    start() {
+      if (!isRunning) {
+        isRunning = true;
+        intervalId = setInterval(checkConnection, period);
+        console.log("代理池已启动");
+      }
+    },
+    stop() {
+      clearInterval(intervalId);
+      isRunning = false;
+      intervalId = null; // 清除定时器ID
+      console.log("代理池已停止");
+    },
+    restart() {
+      this.stop();
+      this.start();
+    },
+  };
 };
 
 initPool({
   handleAllNode: (allNode) => {
     return allNode.filter((item) => item !== "REJECT");
   },
+  period: 3000,
 });
+
+export const proxy = axios.create({
+  proxy: {
+    host: "127.0.0.1",
+    port: 7890,
+  },
+});
+export async function testProxyConnection(url: string, silent?: boolean) {
+  try {
+    const response = await proxy.get(url);
+    if (!silent) console.log("Proxy connection successful:", response.status);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && !silent)
+      console.error("Proxy connection failed:", error.message);
+    return false;
+  }
+}
