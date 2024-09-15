@@ -38,7 +38,7 @@ type Configuration = {
   selectorName?: string;
   period?: number; //轮换ip周期
   handleAllNode?: (allNode: string[]) => string[];
-  token: string;
+  token?: string;
 };
 export const initPool = async (configuration: Configuration) => {
   TOKEN.value = configuration.token;
