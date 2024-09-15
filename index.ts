@@ -66,6 +66,20 @@ export const initPool = async (configuration: Configuration) => {
         console.log("代理池已启动");
       }
     },
+    switch(node: string) {
+      choiceProxyNode(selectorName, node);
+      console.log("已切换至", node);
+    },
+    next() {
+      const nextNode = next();
+      choiceProxyNode(selectorName, nextNode);
+      console.log("已切换至", nextNode);
+    },
+    back() {
+      const backNode = back();
+      choiceProxyNode(selectorName, backNode);
+      console.log("已切换至", backNode);
+    },
     pause: () => {
       clearInterval(intervalId);
       isRunning = false;
