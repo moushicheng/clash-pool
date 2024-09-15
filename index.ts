@@ -9,6 +9,7 @@ import {
 } from "./src/store";
 import { selectOne } from "./utils/selectOne";
 import axios from "axios";
+import { TOKEN } from "./const";
 
 export const getSelectors = async () => {
   if (selectorsStorage) return selectorsStorage;
@@ -37,8 +38,10 @@ type Configuration = {
   selectorName?: string;
   period?: number; //轮换ip周期
   handleAllNode?: (allNode: string[]) => string[];
+  token: string;
 };
 export const initPool = async (configuration: Configuration) => {
+  TOKEN.value = configuration.token;
   const selectorName = configuration.selectorName || "GLOBAL";
   const period = configuration.period || 1000 * 60 * 5;
   const selectorNode = await choiceSelector(selectorName);

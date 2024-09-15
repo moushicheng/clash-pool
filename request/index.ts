@@ -9,8 +9,8 @@ export const request = axios.create({
 request.interceptors.request.use(
   (config) => {
     // 在请求头中添加 Authorization
-    if (TOKEN) {
-      config.headers["Authorization"] = `Bearer ${TOKEN}`;
+    if (TOKEN.value) {
+      config.headers["Authorization"] = `Bearer ${TOKEN.value}`;
     }
     return config;
   },
