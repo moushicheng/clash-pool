@@ -45,7 +45,7 @@ export const initPool = async (configuration: Configuration) => {
   const allNode: string[] = configuration.handleAllNode
     ? configuration.handleAllNode(selectorNode["all"])
     : selectorNode["all"];
-  const { next, back, reset } = selectOne(allNode);
+  const { next, back, reset, getCurrent } = selectOne(allNode);
   const checkConnection = async () => {
     const nextNode = next();
     choiceProxyNode(selectorName, nextNode);
@@ -59,6 +59,14 @@ export const initPool = async (configuration: Configuration) => {
   let intervalId: any;
   let isRunning = false;
   return {
+    getStatus() {
+      return {
+        node: getCurrent(),
+        isRunning,
+        period,
+        selector: selectorName,
+      };
+    },
     start() {
       if (!isRunning) {
         isRunning = true;
