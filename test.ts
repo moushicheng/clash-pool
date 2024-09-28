@@ -5,6 +5,8 @@ async function main() {
     handleAllNode: (allNode) => {
       return allNode.filter((item) => item !== "REJECT");
     },
+    token: "kWe-LnS-en3-vfQ",
   });
   start();
 }
+main();

@@ -4,10 +4,10 @@
     "module": "CommonJS",                  // 模块系统
     "outDir": "./dist",                    // 输出目录
     "rootDir": "./",                    // 源文件目录
-    "declaration": true,           // 生成类型声明文件
-    "declarationDir": "./dist",    // 类型声明文件输出目录
+    "declaration": true,                    // 生成类型声明文件
+    "declarationDir": "./dist",             // 类型声明文件输出目录
     "strict": true,                         // 启用所有严格类型检查选项
     "esModuleInterop": true                 // 允许默认导入非模块
   },
-  "exclude": ["node_modules", "**/*.spec.ts","test.ts"] // 排除的文件
+  "exclude": ["node_modules", "**/*.spec.ts", "test.ts"] // 排除的文件
 }
