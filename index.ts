@@ -73,11 +73,11 @@ export const initPool = async (configuration: Configuration) => {
   const { next, back, reset, getCurrent } = selectOne(allNode);
   const checkConnection = async () => {
     const nextNode = next();
-    choiceProxyNode(selectorName, nextNode);
+    await choiceProxyNode(selectorName, nextNode);
     const connection = await testProxyConnection(testUrl, proxyPort);
     if (!connection) {
       const originNode = next();
-      choiceProxyNode(selectorName, originNode);
+      await choiceProxyNode(selectorName, originNode);
     }
   };
   let intervalId: any;
@@ -98,18 +98,18 @@ export const initPool = async (configuration: Configuration) => {
         console.log("代理池已启动");
       }
     },
-    switch(node: string) {
-      choiceProxyNode(selectorName, node);
+    async switch(node: string) {
+      await choiceProxyNode(selectorName, node);
       console.log("已切换至", node);
     },
-    next() {
+    async next() {
       const nextNode = next();
-      choiceProxyNode(selectorName, nextNode);
+      await choiceProxyNode(selectorName, nextNode);
       console.log("已切换至", nextNode);
     },
-    back() {
+    async back() {
       const backNode = back();
-      choiceProxyNode(selectorName, backNode);
+      await choiceProxyNode(selectorName, backNode);
       console.log("已切换至", backNode);
     },
     pause: () => {
