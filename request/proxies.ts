@@ -7,7 +7,7 @@ export const getProxies = async () => {
       return response.data.proxies;
     })
     .catch((error) => {
-      console.error("请求错误:", error.response.data);
+      console.error("请求错误:", error?.response?.data || error);
     });
 };
 export const choiceProxyNode = async (selector: string, node: string) => {

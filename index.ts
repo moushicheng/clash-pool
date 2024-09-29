@@ -9,7 +9,7 @@ import {
 } from "./src/store";
 import { selectOne } from "./utils/selectOne";
 import axios from "axios";
-import { TOKEN } from "./const";
+import { request } from "./request";
 
 export const getSelectors = async () => {
   if (selectorsStorage) return selectorsStorage;
@@ -36,15 +36,34 @@ export const choiceSelector = async (name: string) => {
 
 type Configuration = {
   selectorName?: string;
-  period?: number; //轮换ip周期
-  handleAllNode?: (allNode: string[]) => string[];
+  //轮换ip周期，默认5分钟
+  period?: number;
+  //代理地址,默认7890
+  proxyPort?: number;
+  //外部控制器token
   token?: string;
+  //外部控制器地址，默认http://127.0.0.1:9090
+  controlUrl?: string;
+  //测试地址
+  testUrl?: string;
+  //得到代理集所有节点时
+  handleAllNode?: (allNode: string[]) => string[];
 };
 export const initPool = async (configuration: Configuration) => {
-  TOKEN.value = configuration.token;
+  //设置外部控制器地址
+  request.defaults.baseURL =
+    configuration.controlUrl || "http://127.0.0.1:9090";
+  //设置TOKEN，有些环境需要TOKEN才能连上外部控制器
+  if (configuration.token) {
+    request.defaults.headers["Authorization"] = `Bearer ${configuration.token}`;
+  }
+  const proxyPort = configuration.proxyPort || 7890;
+  //选择代理集
   const selectorName = configuration.selectorName || "GLOBAL";
+  const testUrl = configuration.testUrl || "http://www.google.com";
   const period = configuration.period || 1000 * 60 * 5;
   const selectorNode = await choiceSelector(selectorName);
+  //获取所有节点
   const allNode: string[] = configuration.handleAllNode
     ? configuration.handleAllNode(selectorNode["all"])
     : selectorNode["all"];
@@ -52,10 +71,9 @@ export const initPool = async (configuration: Configuration) => {
   const checkConnection = async () => {
     const nextNode = next();
     choiceProxyNode(selectorName, nextNode);
-
-    const connection = await testProxyConnection("http://www.google.com");
+    const connection = await testProxyConnection(testUrl, proxyPort);
     if (!connection) {
-      const originNode = back();
+      const originNode = next();
       choiceProxyNode(selectorName, originNode);
     }
   };
@@ -109,13 +127,17 @@ export const initPool = async (configuration: Configuration) => {
   };
 };
 
-export const proxy = axios.create({
-  proxy: {
-    host: "127.0.0.1",
-    port: 7890,
-  },
-});
-export async function testProxyConnection(url: string, silent?: boolean) {
+export async function testProxyConnection(
+  url: string,
+  port: number,
+  silent?: boolean
+) {
+  const proxy = axios.create({
+    proxy: {
+      host: "127.0.0.1",
+      port,
+    },
+  });
   try {
     const response = await proxy.get(url);
     if (!silent) console.log("Proxy connection successful:", response.status);
