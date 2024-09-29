@@ -1,36 +1,35 @@
 import { config } from "dotenv";
 config();
 import { choiceProxyNode, getProxies } from "./request/proxies";
-import { extractSelector } from "./src/proxies";
-import {
-  selectorsStorage,
-  setCurrentSelector,
-  setSelectorsStorage,
-} from "./src/store";
+import { extractSelector, proxies } from "./src/proxies";
 import { selectOne } from "./utils/selectOne";
 import axios from "axios";
 import { request } from "./request";
 
+type Storage = {
+  selectors: proxies;
+};
+function isEmpty(obj: any) {
+  return Object.keys(obj).length === 0;
+}
 export const getSelectors = async () => {
-  if (selectorsStorage) return selectorsStorage;
-
   const proxies = await getProxies();
   const selectors = extractSelector(proxies);
   if (Object.keys(selectors).length === 0) {
     console.error("could not find any selectors!");
     return {};
   }
-  setSelectorsStorage(selectors);
-
   return selectors;
 };
 
-export const choiceSelector = async (name: string) => {
-  const selectors = await getSelectors();
+export const choiceSelector = async (name: string, storage: Storage) => {
+  const selectors = isEmpty(storage.selectors)
+    ? await getSelectors()
+    : storage.selectors;
+  storage.selectors = selectors;
   if (!selectors[name]) {
     throw new Error("could't find selector");
   }
-  setCurrentSelector(selectors[name]);
   return selectors[name];
 };
 
@@ -50,6 +49,10 @@ type Configuration = {
   handleAllNode?: (allNode: string[]) => string[];
 };
 export const initPool = async (configuration: Configuration) => {
+  const storage: Storage = {
+    selectors: {},
+  };
+  debugger;
   //设置外部控制器地址
   request.defaults.baseURL =
     configuration.controlUrl || "http://127.0.0.1:9090";
@@ -62,7 +65,7 @@ export const initPool = async (configuration: Configuration) => {
   const selectorName = configuration.selectorName || "GLOBAL";
   const testUrl = configuration.testUrl || "http://www.google.com";
   const period = configuration.period || 1000 * 60 * 5;
-  const selectorNode = await choiceSelector(selectorName);
+  const selectorNode = await choiceSelector(selectorName, storage);
   //获取所有节点
   const allNode: string[] = configuration.handleAllNode
     ? configuration.handleAllNode(selectorNode["all"])
